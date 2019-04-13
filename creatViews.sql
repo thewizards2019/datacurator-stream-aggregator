@@ -1,4 +1,4 @@
-CREATE STREAM masterStream (content VARCHAR, sentiment VARCHAR, profanity VARCHAR, personal VARCHAR)
+CREATE STREAM masterStream (content VARCHAR, sentiment VARCHAR, profanity VARCHAR, personal VARCHAR, preference VARCHAR)
   WITH (KAFKA_TOPIC='content_curator_twitter', VALUE_FORMAT='JSON') ;
 
 CREATE STREAM content
@@ -29,6 +29,13 @@ CREATE STREAM personal
   WHERE personal IS NOT NULL ;
 
 
+CREATE STREAM preference
+  WITH(VALUE_FORMAT='JSON')
+  AS SELECT ROWKEY as uuid, preference
+  FROM masterStream
+  WHERE preference IS NOT NULL ;
+
+
 CREATE TABLE contentTable (uuid VARCHAR, content VARCHAR)
   WITH (KAFKA_TOPIC='CONTENT', VALUE_FORMAT='JSON', KEY='uuid') ;
 
@@ -40,6 +47,9 @@ CREATE TABLE profanityTable (uuid VARCHAR, profanity VARCHAR)
 
 CREATE TABLE personalTable (uuid VARCHAR, personal VARCHAR)
   WITH (KAFKA_TOPIC='PERSONAL', VALUE_FORMAT='JSON', KEY='uuid') ;
+
+CREATE TABLE preferenceTable (uuid VARCHAR, preference VARCHAR)
+  WITH (KAFKA_TOPIC='PREFERENCE', VALUE_FORMAT='JSON', KEY='uuid') ;
 
 
 CREATE TABLE preView1
@@ -76,3 +86,14 @@ CREATE TABLE preView3
 
 CREATE TABLE preView3_t (uuid VARCHAR, content VARCHAR, sentiment VARCHAR, profanity VARCHAR, personal VARCHAR)
   WITH (KAFKA_TOPIC='PREVIEW3', VALUE_FORMAT='JSON', KEY='UUID') ;
+
+
+CREATE TABLE preView4
+  WITH(VALUE_FORMAT='JSON')
+  AS SELECT IFNULL(c.uuid, s.uuid) AS uuid, c.content AS content, s.preference AS preference
+    FROM contentTable c
+    FULL JOIN preferenceTable p
+    ON c.uuid = p.uuid ;
+
+CREATE TABLE preView4_t (uuid VARCHAR, content VARCHAR, preference VARCHAR)
+  WITH (KAFKA_TOPIC='PREVIEW4', VALUE_FORMAT='JSON', KEY='UUID') ;
