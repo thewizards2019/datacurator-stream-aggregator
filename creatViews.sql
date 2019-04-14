@@ -85,15 +85,25 @@ CREATE TABLE preView3
 
 
 CREATE TABLE preView3_t (uuid VARCHAR, content VARCHAR, sentiment VARCHAR, profanity VARCHAR, personal VARCHAR)
-  WITH (KAFKA_TOPIC='PREVIEW3', VALUE_FORMAT='JSON', KEY='UUID') ;
+  WITH (KAFKA_TOPIC='PREVIEW3', VALUE_FORMAT='JSON', KEY='uuid') ;
 
 
 CREATE TABLE preView4
   WITH(VALUE_FORMAT='JSON')
-  AS SELECT IFNULL(c.uuid, s.uuid) AS uuid, c.content AS content, s.preference AS preference
-    FROM contentTable c
+  AS SELECT IFNULL(pv3.uuid, p.uuid) AS uuid, pv3.content AS content, pv3.sentiment AS sentiment, pv3.profanity AS profanity, pv3.personal AS personal, p.preference AS preference
+    FROM preView3_t pv3
     FULL JOIN preferenceTable p
-    ON c.uuid = p.uuid ;
+    ON pv3.uuid = p.uuid ;
 
-CREATE TABLE preView4_t (uuid VARCHAR, content VARCHAR, preference VARCHAR)
-  WITH (KAFKA_TOPIC='PREVIEW4', VALUE_FORMAT='JSON', KEY='UUID') ;
+CREATE TABLE preView4_t (uuid VARCHAR, content VARCHAR, sentiment VARCHAR, profanity VARCHAR, personal VARCHAR, preference VARCHAR)
+  WITH (KAFKA_TOPIC='PREVIEW4', VALUE_FORMAT='JSON', KEY='uuid') ;
+
+CREATE TABLE PREFERENCES
+  WITH(VALUE_FORMAT='JSON')
+  AS SELECT uuid, content, preference
+    FROM preView4
+    WHERE content IS NOT NULL
+    AND preference IS NOT NULL ;
+
+CREATE TABLE preference_t (uuid VARCHAR, content VARCHAR, preference VARCHAR)
+  WITH (KAFKA_TOPIC='PREFERENCES', VALUE_FORMAT='JSON', KEY='uuid') ;

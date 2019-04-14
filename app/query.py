@@ -24,7 +24,9 @@ def query_list():
         "CREATE TABLE preView2_t (uuid VARCHAR, content VARCHAR, sentiment VARCHAR, profanity VARCHAR) WITH (KAFKA_TOPIC='PREVIEW2', VALUE_FORMAT='JSON', KEY='UUID') ;",
         "CREATE TABLE preView3 WITH(VALUE_FORMAT='JSON') AS SELECT IFNULL(pv2.uuid, pro.uuid) AS uuid, pv2.content AS content,  pv2.sentiment AS sentiment, pv2.profanity AS profanity, pro.personal AS personal FROM preView2_t pv2 FULL JOIN personalTable pro ON pv2.uuid = pro.uuid ;",
         "CREATE TABLE preView3_t (uuid VARCHAR, content VARCHAR, sentiment VARCHAR, profanity VARCHAR, personal VARCHAR) WITH (KAFKA_TOPIC='PREVIEW3', VALUE_FORMAT='JSON', KEY='UUID') ;",
-        "CREATE TABLE preView4 WITH(VALUE_FORMAT='JSON') AS SELECT IFNULL(c.uuid, s.uuid) AS uuid, c.content AS content, s.preference AS preference FROM contentTable c FULL JOIN preferenceTable p ON c.uuid = p.uuid ;",
-        "CREATE TABLE preView4_t (uuid VARCHAR, content VARCHAR, preference VARCHAR) WITH (KAFKA_TOPIC='PREVIEW4', VALUE_FORMAT='JSON', KEY='UUID') ;",
+        "CREATE TABLE preView4 WITH(VALUE_FORMAT='JSON') AS SELECT IFNULL(pv3.uuid, p.uuid) AS uuid, pv3.content AS content, pv3.sentiment AS sentiment, pv3.profanity AS profanity, pv3.personal AS personal, p.preference AS preference FROM preView3_t pv3 FULL JOIN preferenceTable p ON pv3.uuid = p.uuid ;",
+        "CREATE TABLE preView4_t (uuid VARCHAR, content VARCHAR, sentiment VARCHAR, profanity VARCHAR, personal VARCHAR, preference VARCHAR) WITH (KAFKA_TOPIC='PREVIEW4', VALUE_FORMAT='JSON', KEY='uuid') ;",
+        "CREATE TABLE PREFERENCES WITH(VALUE_FORMAT='JSON') AS SELECT uuid, content, preference FROM preView4 WHERE content IS NOT NULL AND preference IS NOT NULL ;",
+        "CREATE TABLE preference_t (uuid VARCHAR, content VARCHAR, preference VARCHAR) WITH (KAFKA_TOPIC='PREFERENCES', VALUE_FORMAT='JSON', KEY='uuid') ;"
     ]
     return q
